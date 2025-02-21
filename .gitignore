@@ -1,0 +1,6 @@
+
+# ignore dev artifacts
+node_modules
+
+# ignore ignore build artifacts
+dist

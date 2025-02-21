@@ -1,0 +1,10 @@
+# ignore dev artifacts
+.git
+.gitignore
+Dockerfile
+README.md
+
+# ignore build artifacts
+node_modules
+dist
+
