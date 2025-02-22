@@ -24,10 +24,12 @@
   },
   "homepage": "https://github.com/crchauffe/mock-auth-service#readme",
   "devDependencies": {
+    "@types/express": "^5.0.0",
     "@types/node": "^22.13.5",
     "typescript": "^5.7.3"
   },
   "dependencies": {
+    "express": "^4.21.2",
     "yaml": "^2.7.0"
   }
 }
