@@ -9,6 +9,7 @@ import { EOL } from "os";
 export enum EndpointBehavior {
     ISSUE = "ISSUE",
     VERIFY = "VERIFY",
+    DECODE = "DECODE",
     RETURN_OK = "RETURN_OK",
     RETURN_NOT_AUTHENTICATED = "RETURN_NOT_AUTHENTICATED",
 }

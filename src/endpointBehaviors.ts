@@ -1,6 +1,7 @@
 import { EndpointBehavior, EndpointConfig, IssueEndpointConfig } from "./config"
-import { RequestHandler, Request } from "express"
+import { RequestHandler, Request, Response } from "express"
 import GLOBAL_LOGGER from "./base_tool/logger"
+import * as JWT from "jsonwebtoken"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -23,7 +24,7 @@ export const returnNotAuthenticated: RequestHandler = async (request, response) 
 
 ///////////////////////////////////////////////////////////////////////////////
 function makeJwtPayload(config: IssueEndpointConfig, defaultExpiryHours: number, request: Request) {
-    const iat = new Date().getTime()
+    const iat = Math.floor(new Date().getTime() / 1000)
     const expiryHours = config.tokenExpiryHours || defaultExpiryHours
     const exp = iat + hoursToSeconds(expiryHours)
 
@@ -47,22 +48,71 @@ export function makeIssueBehavior(
         const jwtPayload = makeJwtPayload(config, defaultExpiryHours, request);
 
         await GLOBAL_LOGGER.info("Created JWT payload:  ", jwtPayload);
+
+        const token = JWT.sign(jwtPayload, secret)
+
+        await GLOBAL_LOGGER.info("Issued JWT:  ", token);
         
-        // TODO: issue the token in the response
-        response.status(500).send()
+        response.status(200).send(token)
     }
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
-export function makeVerifyBehavior(config: EndpointConfig, secret: string): RequestHandler {
+export async function decodeBehavior(request: Request, response: Response) {
+    const authHeader = request.headers["authorization"]
+
+    await GLOBAL_LOGGER.info("Decoding for auth header:  ", authHeader)
+
+    const token = authHeader?.substring("Bearer ".length)
+
+    try {
+        if(token) {
+            const payload = JWT.decode(token)
+            await GLOBAL_LOGGER.info("Decoded JWT payload:  ", payload)
+            response.status(200).send(payload)
+            return;
+        }
+    }
+    catch(error) {
+        const message = `Error while decoding token:   ${error}`
+        await GLOBAL_LOGGER.info(message, error)
+        response.status(401).send(message);
+        return;
+    }
+
+    response.status(400).send("Bad token")
+    return;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+export function makeVerifyBehavior(secret: string): RequestHandler {
     return async (request, response) => {
         const authHeader = request.headers["authorization"]
 
         await GLOBAL_LOGGER.info("Verifying for auth header:  ", authHeader)
 
-        // TODO: verify the token in the auth header!
-        response.status(500).send()
+        const token = authHeader?.substring("Bearer ".length)
+
+        try {
+            if(token) {
+                const payload = JWT.verify(token, secret)
+                await GLOBAL_LOGGER.info("Verified JWT payload:  ", payload)
+                response.status(200).send(payload)
+                return;
+            }
+        }
+        catch(error) {
+            const message = `Error while verifying token:   ${error}`
+            await GLOBAL_LOGGER.info(message, error)
+            response.status(401).send(message);
+            return;
+        }
+
+        response.status(400).send("Bad token")
+        return;
     }
 }
 
@@ -79,7 +129,10 @@ export function makeEndpointBehavior(config: EndpointConfig, defaultExpiryHours:
         case EndpointBehavior.ISSUE:
             return makeIssueBehavior(config as IssueEndpointConfig, defaultExpiryHours, secret)
         
+        case EndpointBehavior.DECODE:
+            return decodeBehavior
+
         case EndpointBehavior.VERIFY:
-            return makeVerifyBehavior(config, secret)
+            return makeVerifyBehavior(secret)
     }
 }
