@@ -4,3 +4,10 @@ node_modules
 
 # ignore ignore build artifacts
 dist
+
+#ignore yaml files
+*.yml
+*.yaml
+
+# don't ingore anything in src/resources
+!src/resources/*
