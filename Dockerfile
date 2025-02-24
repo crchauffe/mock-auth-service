@@ -28,6 +28,6 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 
 # Command to run the application
-CMD ["npm", "run", "start"]
+CMD ["node", "dist/main.js", "-l", "logs/output.log"]
 
 
