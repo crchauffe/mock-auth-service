@@ -5,6 +5,7 @@ import filesystem from "./utils/filesystem";
 import { parseArgs, ParseArgsConfig } from "util";
 import BaseTool, { CliArgs, BaseExitCodes, ParseArgsOptionsConfig, ParsedArgOptions } from "./base_tool/base_tool";
 import * as Path from "path";
+import { PathLike } from "fs";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,7 +25,7 @@ export const ExitCodes = { ...BaseExitCodes, ...MockAuthServiceExitCodes }
 //////////////////////////////////////////////////////////////////////////
 export type MockAuthServiceCliArgs = CliArgs & {
   listeningPort: number,
-  configFile?: Path.ParsedPath
+  configFile?: PathLike
 }
 
 
@@ -43,7 +44,7 @@ export class MockAuthService extends BaseTool<MockAuthServiceCliArgs> {
       config_file: {
         short: "c",
         type: "string",
-        default: process.env["CONFIG_FILE"] || "config.yml"
+        default: process.env["CONFIG_FILE"]
       }
     };
   }
@@ -57,15 +58,14 @@ export class MockAuthService extends BaseTool<MockAuthServiceCliArgs> {
     const parsedListeningPort = unparsedlisteningPort && Number.parseInt(unparsedlisteningPort) || 80
 
     const configFileArg = parsedArgOptions?.["config_file"];
-    const unparsedConfigFile = typeof configFileArg === "string" ? configFileArg : undefined
-    const parsedConfigFile = unparsedConfigFile && Path.parse(unparsedConfigFile) || Path.parse(Path.resolve("config.yml"))
+    const configFile = typeof configFileArg === "string" ? configFileArg : undefined
     
 
     // construct CLI args based on the base args and parsed args
     const cliArgs = {
       ...super.cliArgsFromParsedArgs(parsedArgOptions),
       listeningPort:  parsedListeningPort,
-      configFile:  parsedConfigFile
+      configFile:  configFile
     }
 
     return cliArgs
