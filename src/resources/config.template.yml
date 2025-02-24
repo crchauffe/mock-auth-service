@@ -1,26 +1,32 @@
 # the port to listen on to handle auth requests
 listeningPort: 80
 
-# the amount of time issued tokens are valid
-tokenExpiryHours: 2.5
+# the list of endpoints to bind to
+endpoints:
 
-# the default payload to use when issuing tokens
-defaultPayload:
-  sub: "admin"
+  # the path to bind to for issuing JWTs
+  - path:  /issue
+    method: POST
+    behavior:  ISSUE
 
-# the path to bind to for issuing JWTs
-# Note:  if found, the body of the HTTP request will
-#   be packed into the issued JWT.  Otherwise, the
-#   default user will be
-issueEndpoint:
-  method:  POST
-  path:  /issue
+    # specifies the number of hours issued tokens tokens are valid for
+    tokenExpiryHours: 50
 
-# the endpoint to bind to for verifying JWTS
-# Note:  the Authorization header is expected to be set
-verifyEndpoint:
-  method: GET
-  path: /verify
+    # specifies whether to repack the POST body as the JWT payload of issued tokens
+    usePostBodyForJwtPayload:  false
 
+    # the payload to use for the issued JWT if a POST body is not suplied
+    defaultPayload:
+      sub: admin
+    
 
+  # the endpoint to bind to for verifying JWTS
+  - path:  /verify
+    method: GET
+    behavior:  VERIFY
+
+  # default binding for root; verify the service is working
+  - path:  /
+    method: GET
+    behavior:  RETURN_OK
 

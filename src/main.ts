@@ -6,6 +6,8 @@ import * as Path from "path";
 import { PathLike } from "fs";
 import { addSecret } from "./base_tool/secret_scrubber";
 import PromiseUtils from "./utils/promise"
+import * as Express from "express";
+import { makeEndpointBehavior } from "./endpointBehaviors";
 import { EOL } from "os";
 
 
@@ -123,6 +125,42 @@ export class MockAuthService extends BaseTool<MockAuthServiceCliArgs> {
 
 
   //////////////////////////////////////////////////////////////////////////
+  async registerEndpoint(
+    expressApp: Express.Application,
+    endpointConfig: Config.EndpointConfig,
+    defaultExpiryHours: number,
+    tokenSecret: string
+  ) {
+    if(!endpointConfig.path) {
+      await GLOBAL_LOGGER.warning("Skipping endpoint config:  path not specified.  ",
+        "Endpoint config:  ", endpointConfig);
+      return
+    }
+    if(!endpointConfig.method) {
+      await GLOBAL_LOGGER.warning("Skipping endpoint config:  method not specified (",
+        Config.Methods, ").  Endpoint config:  ", endpointConfig);
+      return
+    }
+    if(!endpointConfig.behavior) {
+      await GLOBAL_LOGGER.warning("Skipping endpoint config:  behavior not specified (",
+        Config.EndpointBehavior, ").  Endpoint config:  ", endpointConfig);
+      return
+    }
+
+    const handler = makeEndpointBehavior(endpointConfig, defaultExpiryHours, tokenSecret)
+
+    if(endpointConfig.method === Config.Methods.GET) {
+      if(handler) return expressApp.get(endpointConfig.path, handler);
+    }
+    else if(endpointConfig.method === Config.Methods.POST) {
+      if(handler) return expressApp.post(endpointConfig.path, handler)
+    }
+
+    await GLOBAL_LOGGER.warning("Endpoint NOT configured:  ", endpointConfig);
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////
   async main(cliArgs: MockAuthServiceCliArgs) {
     const configFile = await this.getConfigFile(cliArgs);
 
@@ -138,12 +176,35 @@ export class MockAuthService extends BaseTool<MockAuthServiceCliArgs> {
 
     const listenigPort = config.listeningPort || cliArgs.listeningPort
     const tokenExpiryHours = config.tokenExpiryHours || cliArgs.tokenExpiryHours
+    const tokenSecret = cliArgs.tokenSecret
+    const endpoints = config.endpoints || []
 
-    await GLOBAL_LOGGER.info("Listening port:  ", listenigPort)
-    await GLOBAL_LOGGER.info("Token expiry hours:  ", tokenExpiryHours)
-    await GLOBAL_LOGGER.info("Token secret:  ", cliArgs.tokenSecret)
+    const expressApp = Express.default()
 
-    return ExitCodes.SUCCESS
+    // configure the express app with the endpoints
+    await PromiseUtils.sequential(...endpoints.map(async (e) => {
+      await this.registerEndpoint(expressApp, e, tokenExpiryHours, tokenSecret)
+    }))
+
+    // return a promise that never resolves so that main doesn't exit and continues to
+    // handle HTTP requests
+    return new Promise<number>(async (resolve, reject) => {
+
+      // start listening, reject on error
+      expressApp.listen(listenigPort, async (error) => {
+        if(error) {
+          await GLOBAL_LOGGER.error("Error from HTTP server:  ", error)
+        }
+      })
+
+      // format endpoints for output
+      const endpointMsg = endpoints
+      .map(e => ("   " + (e.behavior || "") + ":  ").padEnd(15) + (e.method || "").padEnd(7) +  " http://localhost:" + listenigPort + e.path)
+      .join(EOL)
+
+      // print out a pretty message
+      await GLOBAL_LOGGER.info("Listening on endpoints:  ", EOL + endpointMsg + EOL)
+    })
   }
 }
 
