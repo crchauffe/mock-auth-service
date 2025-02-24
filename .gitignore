@@ -5,6 +5,9 @@ node_modules
 # ignore ignore build artifacts
 dist
 
+# ignore log files
+*.log
+
 #ignore yaml files
 *.yml
 *.yaml
