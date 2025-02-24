@@ -23,6 +23,8 @@ export const ExitCodes = { ...BaseExitCodes, ...MockAuthServiceExitCodes }
 
 //////////////////////////////////////////////////////////////////////////
 export type MockAuthServiceCliArgs = CliArgs & {
+  listeningPort: number,
+  configFile?: Path.ParsedPath
 }
 
 
@@ -33,6 +35,16 @@ export class MockAuthService extends BaseTool<MockAuthServiceCliArgs> {
   //////////////////////////////////////////////////////////////////////////
   getCliArgsConfig(): ParseArgsOptionsConfig {
     return {
+      listening_port: {
+        short: "p",
+        type: "string",
+        default: process.env["LISTENING_PORT"] || "80"
+      },
+      config_file: {
+        short: "c",
+        type: "string",
+        default: process.env["CONFIG_FILE"] || "config.yml"
+      }
     };
   }
 
@@ -40,9 +52,20 @@ export class MockAuthService extends BaseTool<MockAuthServiceCliArgs> {
   //////////////////////////////////////////////////////////////////////////
   cliArgsFromParsedArgs(parsedArgOptions: ParsedArgOptions): MockAuthServiceCliArgs {
 
+    const listeningPortArg = parsedArgOptions?.["listening_port"];
+    const unparsedlisteningPort = typeof listeningPortArg === "string" ? listeningPortArg : process.env["LISTENING_PORT"]
+    const parsedListeningPort = unparsedlisteningPort && Number.parseInt(unparsedlisteningPort) || 80
+
+    const configFileArg = parsedArgOptions?.["config_file"];
+    const unparsedConfigFile = typeof configFileArg === "string" ? configFileArg : undefined
+    const parsedConfigFile = unparsedConfigFile && Path.parse(unparsedConfigFile) || Path.parse(Path.resolve("config.yml"))
+    
+
     // construct CLI args based on the base args and parsed args
     const cliArgs = {
       ...super.cliArgsFromParsedArgs(parsedArgOptions),
+      listeningPort:  parsedListeningPort,
+      configFile:  parsedConfigFile
     }
 
     return cliArgs
@@ -52,6 +75,8 @@ export class MockAuthService extends BaseTool<MockAuthServiceCliArgs> {
   //////////////////////////////////////////////////////////////////////////
   async main(cliArgs: MockAuthServiceCliArgs) {
     await GLOBAL_LOGGER.info("Hello world!")
+    await GLOBAL_LOGGER.info("Listening port:  ", cliArgs.listeningPort);
+    await GLOBAL_LOGGER.info("Config file:  ", cliArgs.configFile);
 
     return ExitCodes.SUCCESS
   }
