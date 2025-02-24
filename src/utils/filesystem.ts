@@ -1,5 +1,6 @@
 import { PathLike } from "node:fs";
 import fs from "node:fs/promises";
+import GLOBAL_LOGGER from "../base_tool/logger";
 
 const filesystem =  {
     ...fs,
@@ -11,7 +12,8 @@ const filesystem =  {
             const statResult = await fs.stat(filePath)
             return statResult.isDirectory()
         }
-        catch {
+        catch (err) {
+            await GLOBAL_LOGGER.debug("Exception while determining if dir exists:  ", err);
             return false
         }
     },
@@ -20,11 +22,13 @@ const filesystem =  {
     ///////////////////////////////////////////////////////////////////////////////
     // return true if path is a regular file
     async isFile(filePath: PathLike) {
+
         try {
             const statResult = await fs.stat(filePath);
             return statResult.isFile()
         }
-        catch {
+        catch(err) {
+            await GLOBAL_LOGGER.debug("Exception while determining if file exists:  ", err);
             return false
         }
     },
