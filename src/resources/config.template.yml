@@ -1,24 +1,24 @@
 # the port to listen on to handle auth requests
-listening_port: 80
+listeningPort: 80
 
 # the amount of time issued tokens are valid
-token_expiry_hours: 2.5
+tokenExpiryHours: 2.5
 
-# the default user to use when issuing tokens
-default_user:
+# the default payload to use when issuing tokens
+defaultPayload:
   sub: "admin"
 
 # the path to bind to for issuing JWTs
 # Note:  if found, the body of the HTTP request will
 #   be packed into the issued JWT.  Otherwise, the
 #   default user will be
-issue_endpoint:
+issueEndpoint:
   method:  POST
   path:  /issue
 
 # the endpoint to bind to for verifying JWTS
 # Note:  the Authorization header is expected to be set
-verify_endpoint:
+verifyEndpoint:
   method: GET
   path: /verify
 
