@@ -22,7 +22,7 @@ const filesystem =  {
     async isFile(filePath: PathLike) {
         try {
             const statResult = await fs.stat(filePath);
-            return statResult.isDirectory()
+            return statResult.isFile()
         }
         catch {
             return false
