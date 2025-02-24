@@ -1,6 +1,7 @@
 import * as Path from "path";
 import filesystem from "../utils/filesystem";
 import { EOL } from "os";
+import { scrubSecrets } from "./secret_scrubber";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -154,6 +155,8 @@ export class Logger {
     async log(level: LogLevel, ...args: any[]) {
         // get header
         const header = this.getHeader(level);
+
+        args = args.map(a => typeof a === "string" ? scrubSecrets(a) : a);
 
         // invoke all the endpoints and return the result
         return Promise.all(this.config.endpoints.map(endpoint => endpoint(level, header, ...args)))
