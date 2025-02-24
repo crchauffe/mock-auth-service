@@ -1,12 +1,12 @@
-import { isNumberObject } from "util/types";
 import * as Config from "./config";
-import GLOBAL_LOGGER, { DEFAULT_CONSOLE_LOG_ENDPOINT, DEFAULT_GLOBAL_LOGGER_CONFIG, LogEndpoint, LogLevels, makeConsoleLogEndpoint, makeLogfileLogEndpoint } from "./base_tool/logger";
-import filesystem from "./utils/filesystem";
-import { parseArgs, ParseArgsConfig } from "util";
+import GLOBAL_LOGGER from "./base_tool/logger";
+import FsUtils from "./utils/fs";
 import BaseTool, { CliArgs, BaseExitCodes, ParseArgsOptionsConfig, ParsedArgOptions } from "./base_tool/base_tool";
 import * as Path from "path";
 import { PathLike } from "fs";
 import { addSecret } from "./base_tool/secret_scrubber";
+import PromiseUtils from "./utils/promise"
+import { EOL } from "os";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -118,7 +118,7 @@ export class MockAuthService extends BaseTool<MockAuthServiceCliArgs> {
   //////////////////////////////////////////////////////////////////////////
   async makeDefaultConfigFile(configFile: PathLike) {
     const templateConfig = Path.join(this.getResourcesDir(), "config.template.yml") as PathLike
-    await filesystem.copyFile(templateConfig, configFile)
+    await FsUtils.copyFile(templateConfig, configFile)
   }
 
 
@@ -127,7 +127,7 @@ export class MockAuthService extends BaseTool<MockAuthServiceCliArgs> {
     const configFile = await this.getConfigFile(cliArgs);
 
     // ensure the config file exists
-    if(await filesystem.isFile(configFile) == false) {
+    if(await FsUtils.isFile(configFile) == false) {
       await GLOBAL_LOGGER.warning("Config file not found.  Copying config template to ", configFile);
       await this.makeDefaultConfigFile(configFile)
     }

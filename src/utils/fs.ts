@@ -2,7 +2,7 @@ import { PathLike } from "node:fs";
 import fs from "node:fs/promises";
 import GLOBAL_LOGGER from "../base_tool/logger";
 
-const filesystem =  {
+const FsUtils =  {
     ...fs,
     
     ///////////////////////////////////////////////////////////////////////////////
@@ -34,4 +34,4 @@ const filesystem =  {
     },
 };
 
-export default filesystem
+export default FsUtils

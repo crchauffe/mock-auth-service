@@ -1,5 +1,5 @@
 import * as Path from "path";
-import filesystem from "../utils/filesystem";
+import FsUtils from "../utils/fs";
 import { EOL } from "os";
 import { scrubSecrets } from "./secret_scrubber";
 
@@ -44,7 +44,7 @@ export async function makeLogfileLogEndpoint(
     let formattedPath = Path.format(path)
     
     // ensure not to overwrite the previous logfile
-    if(await filesystem.isFile(Path.format(path))) {
+    if(await FsUtils.isFile(Path.format(path))) {
         let dateStr = new Date().toISOString()
         dateStr = dateStr.split(":").join("_")
         dateStr = dateStr.split(".").join("_")
@@ -55,11 +55,11 @@ export async function makeLogfileLogEndpoint(
     }
 
     // create the logfile
-    await filesystem.mkdir(path.dir, { recursive: true })
-    await filesystem.writeFile(formattedPath, "");
+    await FsUtils.mkdir(path.dir, { recursive: true })
+    await FsUtils.writeFile(formattedPath, "");
     
     // ensure logfile was created
-    if(await filesystem.isFile(formattedPath) == false) {
+    if(await FsUtils.isFile(formattedPath) == false) {
         throw new Error(`Not a file:  ${path}`)
     }
     
@@ -79,7 +79,7 @@ export async function makeLogfileLogEndpoint(
             message += EOL
             
             // append message to file
-            await filesystem.appendFile(formattedPath, message)
+            await FsUtils.appendFile(formattedPath, message)
         }
     }
 }
@@ -159,7 +159,7 @@ export class Logger {
         args = args.map(a => typeof a === "string" ? scrubSecrets(a) : a);
 
         // invoke all the endpoints and return the result
-        return Promise.all(this.config.endpoints.map(endpoint => endpoint(level, header, ...args)))
+        return this.config.endpoints.map(endpoint => endpoint(level, header, ...args)).reduce((p,c) => p ? p.then(() => c) : c)
     }
     
     
