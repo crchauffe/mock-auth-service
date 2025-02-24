@@ -4,7 +4,8 @@
   "description": "A configureable authentication service for serving configurable user data",
   "main": "index.js",
   "scripts": {
-    "build": "npx tsc",
+    "dist-resources": "node -e \"require('fs').cpSync('./src/resources', './dist/resources', {recursive: true});\"",
+    "build": "npx tsc && npm run dist-resources",
     "start": "node dist/main.js",
     "dev": "npm run build && npm run start",
     "build-container": "docker build -t mock-auth-service .",
