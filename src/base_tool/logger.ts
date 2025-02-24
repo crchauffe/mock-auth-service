@@ -54,8 +54,8 @@ export async function makeLogfileLogEndpoint(
     }
 
     // create the logfile
-    await filesystem.mkdirAsync(path.dir, { recursive: true })
-    await filesystem.writeFileAsync(formattedPath, "");
+    await filesystem.mkdir(path.dir, { recursive: true })
+    await filesystem.writeFile(formattedPath, "");
     
     // ensure logfile was created
     if(await filesystem.isFile(formattedPath) == false) {
@@ -78,7 +78,7 @@ export async function makeLogfileLogEndpoint(
             message += EOL
             
             // append message to file
-            await filesystem.appendFileAsync(formattedPath, message)
+            await filesystem.appendFile(formattedPath, message)
         }
     }
 }
