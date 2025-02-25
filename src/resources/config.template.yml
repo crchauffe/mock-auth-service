@@ -10,7 +10,7 @@ endpoints:
     behavior:  ISSUE
 
     # specifies the number of hours issued tokens tokens are valid for
-    tokenExpiryHours: 50
+    tokenExpiryHours: 2.5
 
     # specifies whether to repack the POST body as the JWT payload of issued tokens
     usePostBodyForJwtPayload:  false
